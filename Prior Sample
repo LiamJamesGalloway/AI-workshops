@@ -1,0 +1,97 @@
+# -*- coding: utf-8 -*-
+
+import random
+
+def sampleCreate (bn, value):
+    sampleValue = None
+    randNum = random.random()   
+    
+    valueWeight = bn["+"+value]
+    
+    if randNum < valueWeight:
+        sampleValue = True
+    else:
+        sampleValue = False
+    
+    return sampleValue
+
+def sampleVariables(bn, order, logic, N):
+    
+    result = []
+    sample = [0]*len(order)
+    sampleLogic = logic.copy()
+    
+    for l in range(0,len(order)):
+        
+        for k in range(0,N):
+            demandsStr = ""
+            demands = logic[order[l]].split(",")
+            
+            if len(demands) > 1:
+                demandsStr = demands[0]+"|"
+                for i in range (1,len(demands)):
+                    demandsStr += sampleLogic[demands[i]]+","
+                demandsStr = demandsStr[:-1]
+            else:
+                demandsStr = sampleLogic[demands[0]]
+                
+            tempVal = sampleCreate(bn, demandsStr)
+            if tempVal == True:
+                sample[l] += 1
+        if sample[l] > (N/2):
+            result.append(True)
+            sampleLogic[order[l]] = "+"+order[l]
+        else:
+            result.append(False)
+            sampleLogic[order[l]] = "-"+order[l]
+    return result
+                    
+def result(bn, sample, order):
+    resultValues = []
+    resultValue = 1
+    for l in sample:
+        if sample[l] == True:
+            resultValues.append(bn["+"+order[l]])
+        else:
+            resultValues.append(bn["-"+order[l]])     
+    for k in range(0,len(resultValues)):
+        resultValue = resultValue * resultValues[k]
+    return resultValue
+
+order = [
+ "b",
+ "e",
+ "a",
+ "j",
+ "m"]
+
+logic = {
+ "b":"b",
+ "e":"e",
+ "a":"a,b,e",
+ "j":"j,a",
+ "m":"j,a"}
+
+bayesNet = {
+ "+b":0.001,
+ "-b":0.999,
+ "+e":0.002,
+ "-e":0.998,
+ "+a|+b,+e":0.950,
+ "+a|+b,-e":0.940,
+ "+a|-b,+e":0.290,
+ "+a|-b,-e":0.001,
+ "-a|+b,+e":0.050,
+ "-a|+b,-e":0.060,
+ "-a|-b,+e":0.710,
+ "-a|-b,-e":0.999,
+ "+j|+a":0.900,
+ "+j|-a":0.050,
+ "-j|+a":0.100,
+ "-j|-a":0.950,
+ "+m|+a":0.700,
+ "+m|-a":0.010,
+ "-m|+a":0.300,
+ "-m|-a":0.990}
+
+print(result(bayesNet, sampleVariables(bayesNet, order, logic, 1), order))
